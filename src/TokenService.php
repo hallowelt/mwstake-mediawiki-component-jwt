@@ -55,10 +55,12 @@ class TokenService {
 		$privateKeyPem = $this->keyManager->getCurrentPrivateKey();
 		$kid = $this->computeKid( $privateKeyPem );
 
+		// The verification key is never used when minting, but lcobucci/jwt >= 5 rejects empty keys
+		$signingKey = InMemory::plainText( $privateKeyPem );
 		$config = Configuration::forAsymmetricSigner(
 			new Sha256(),
-			InMemory::plainText( $privateKeyPem ),
-			InMemory::plainText( '' )
+			$signingKey,
+			$signingKey
 		);
 
 		$now = new DateTimeImmutable();

@@ -12,7 +12,7 @@
 	"require": {
 		"mwstake/mediawiki-componentloader": "~1",
 		"mwstake/mediawiki-component-wellknown": "~1",
-		"lcobucci/jwt": "^4.1"
+		"lcobucci/jwt": "5.6.0"
 	},
 	"require-dev": {
 		"mediawiki/mediawiki-codesniffer": "45.0.0",
