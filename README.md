@@ -12,6 +12,7 @@ responsibility of the external orchestrator (Kubernetes, Ansible, manual process
 
 ## Compatibility
 - `1.0.x` -> MediaWiki 1.43
+- `2.0.x` -> MediaWiki 1.47
 
 ## Use in a MediaWiki extension
 
