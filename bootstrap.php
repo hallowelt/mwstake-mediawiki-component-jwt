@@ -4,7 +4,7 @@ if ( defined( 'MWSTAKE_MEDIAWIKI_COMPONENT_JWT_VERSION' ) ) {
 	return;
 }
 
-define( 'MWSTAKE_MEDIAWIKI_COMPONENT_JWT_VERSION', '1.0.0' );
+define( 'MWSTAKE_MEDIAWIKI_COMPONENT_JWT_VERSION', '2.0.1' );
 
 MWStake\MediaWiki\ComponentLoader\Bootstrapper::getInstance()
 	->register( 'jwt', static function () {
