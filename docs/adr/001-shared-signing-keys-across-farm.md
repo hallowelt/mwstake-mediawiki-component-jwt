@@ -2,7 +2,10 @@
 
 ## Status
 
-Accepted
+Accepted. Amended by [ADR 002](002-external-key-management.md), which moved key
+generation and rotation out of the component. The Decision, chosen alternative and
+Consequences below describe the current design; Context and rejected alternatives are
+kept as originally written.
 
 ## Date
 
@@ -23,8 +26,11 @@ trusted the JWKS from whichever wiki's URL it was configured with.
 
 ## Decision
 
-All wiki instances in the farm share a single key pair stored at the base
-`$mwsgJWTKeyStoragePath` (default: `jwt-keys/`) without per-wiki subdirectories.
+All wiki instances in the farm share a single key pair. Every instance points
+`$mwsgJWTPrivateKeyFile` (and, during rotation, `$mwsgJWTPrivateKeyPreviousFile`) at the
+same files, so all wikis sign with the same key and publish an identical JWKS.
+Provisioning and rotating those files is the orchestrator's job (see
+[ADR 002](002-external-key-management.md)).
 
 ## Alternatives Considered
 
@@ -52,26 +58,28 @@ subdirectories and serves a combined JWKS containing all wikis' public keys.
 
 ### 3. Shared keys (chosen)
 
-All wikis read/write the same key files. Any wiki's `/.well-known/jwks.json` returns
-identical content. First wiki to run `update.php` generates the initial key; others
-detect it already exists. Key rotation is idempotent — whichever wiki's cron fires
-first rotates, others see the key is already fresh.
+All wikis read the same key files. Any wiki's `/.well-known/jwks.json` returns
+identical content. The files are provisioned and rotated outside the wikis (e.g. from
+a shared Kubernetes Secret or by configuration management), so no wiki generates or
+writes keys and there is nothing to coordinate between instances.
 
 ## Consequences
 
-- **Positive:** Zero configuration for new wiki instances — they immediately work
-  with Grafana JWT auth.
+- **Positive:** No per-wiki configuration — new wiki instances use the farm's shared
+  key files and immediately work with Grafana JWT auth.
 - **Positive:** Single JWKS URL to configure in Grafana (any wiki instance works).
 - **Positive:** Simple mental model — one key pair for the entire farm.
 - **Negative:** No cryptographic isolation between wiki instances. A token minted by
   "en" is valid if presented to a service expecting "bluespice" tokens. Mitigated by
   the `aud` claim in JWT profiles (e.g. `"aud": "statistics-grafana"`).
-- **Negative:** Theoretical race condition if two wikis' cron jobs attempt rotation at
-  the exact same millisecond. Mitigated by FileBackend's atomic operations and the age
-  check in `RotateKeys` (only rotates if key is older than `$mwsgJWTRotationInterval`).
+- **Negative:** Every instance must be given the same key files. An instance pointed at
+  different files would publish a different JWKS, and Grafana (which trusts a single
+  JWKS URL) would reject its tokens. Mitigated by mounting one shared Secret or
+  distributing the files with configuration management (see ADR 002).
 
 ## Notes
 
 If per-wiki isolation becomes necessary in the future (e.g. separate Grafana instances
-per wiki, or multi-tenant SaaS), re-introduce the `WikiMap::getCurrentWikiId()` suffix
-in `ServiceWiring.php` and configure Grafana per-instance.
+per wiki, or multi-tenant SaaS), give each wiki its own `$mwsgJWTPrivateKeyFile` (and
+previous-key file) and configure Grafana per instance. This needs no code change, as
+the component has no wiki-specific key handling.
