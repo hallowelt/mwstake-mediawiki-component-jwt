@@ -38,7 +38,7 @@
 	"autoload": {
 		"psr-4": {
 			"MWStake\\MediaWiki\\Component\\JWT\\": "src/",
-			"MWStake\\MediaWiki\\Component\\JWT\\Tests\\Unit\\": "tests/unit/"
+			"MWStake\\MediaWiki\\Component\\JWT\\Tests\\Unit\\": "tests/phpunit/unit/"
 		},
 		"files": [
 			"bootstrap.php"
